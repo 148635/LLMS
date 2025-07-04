@@ -1,5 +1,8 @@
 package com.llms.model;
 
+import com.llms.model.pojo.FallBackResponse;
+import com.llms.model.pojo.PromptBody;
+import com.llms.model.pojo.ResponseBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +15,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
+
+import static com.llms.model.utils.Constants.*;
 
 @RestController
 @RequestMapping("/api")
@@ -28,14 +31,20 @@ public class ApiController {
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @PostMapping("/generate")
-    public Map<String, String> generate(@RequestBody Map<String, String> body) {
-        String prompt = body.get("prompt");
+    public Object generate(@RequestBody PromptBody promptBody) {
+        String prompt = promptBody.getPrompt();
 
-        Map<String, String> results = new HashMap<>();
-        results.put("gemini", callGemini(prompt));
-        results.put("groq", callGroq(prompt));
-
-        return results;
+        if(prompt != null && !prompt.isEmpty()) {
+            ResponseBody responseBody = new ResponseBody();
+            responseBody.setGemini(callGemini(prompt));
+            responseBody.setGroq(callGroq(prompt));
+            return responseBody;
+        }
+        else{
+            FallBackResponse fallBackResponse = new FallBackResponse();
+            fallBackResponse.setResponse("Give a proper Prompt Once in a while!");
+            return fallBackResponse;
+        }
     }
 
     private String callGroq(String prompt) {
@@ -60,8 +69,12 @@ public class ApiController {
                     .getString("content");
 
         } catch (Exception e) {
-            return "Groq error: " + e.getMessage();
+            return GROQ_ERROR_PREFIX + e.getMessage();
         }
+    }
+
+    private String getExceptionMessage(String error){
+        return EXCEPTION_MSG + error;
     }
 
     private String callGemini(String prompt) {
@@ -99,7 +112,7 @@ public class ApiController {
                     .getString("text");
 
         } catch (Exception e) {
-            return "Gemini error: " + e.getMessage();
+            return GEMINI_ERROR_PREFIX + e.getMessage();
         }
     }
 }
