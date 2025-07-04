@@ -5,17 +5,13 @@ FROM eclipse-temurin:17-jdk-focal as build
 
 WORKDIR /app
 
-# Copy the Maven/Gradle build files first to leverage Docker's caching
-# For Maven:
 COPY pom.xml ./
+COPY mvnw ./
+COPY .mvn ./.mvn
 COPY src ./src
-# For Gradle (uncomment these if using Gradle):
-# COPY build.gradle settings.gradle ./
-# COPY src ./src
 
-# Build the Spring Boot application
-# For Maven:
-RUN ./mvnw clean package -DskipTests
+# Make the mvnw script executable
+RUN chmod +x mvnw
 # If you don't have Maven Wrapper (mvnw), use: RUN mvn clean package -DskipTests
 
 # For Gradle (uncomment these if using Gradle):
