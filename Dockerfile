@@ -16,7 +16,7 @@ RUN chmod +x mvnw
 
 # For Gradle (uncomment these if using Gradle):
 # RUN ./gradlew bootJar -x test
-
+RUN ./mvnw clean package -DskipTests
 # Extract the application JAR path
 # For Maven:
 ARG JAR_FILE=target/*.jar
