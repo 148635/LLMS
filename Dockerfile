@@ -15,7 +15,7 @@ COPY src ./src
 
 # Build the Spring Boot application
 # For Maven:
-RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 # If you don't have Maven Wrapper (mvnw), use: RUN mvn clean package -DskipTests
 
 # For Gradle (uncomment these if using Gradle):
