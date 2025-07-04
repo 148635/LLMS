@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-LLM API Explorer (Spring Boot)</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #007bff;
+        margin-bottom: 30px;
+      }
+      #prompt-section {
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      textarea {
+        width: calc(100% - 22px);
+        min-height: 120px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        resize: vertical;
+      }
+      button {
+        padding: 12px 25px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 17px;
+        transition: background-color 0.3s ease;
+        margin-top: 15px;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .response-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .response-container {
+        border: 1px solid #007bff;
+        background-color: #eaf6ff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+      }
+      .response-container h3 {
+        margin-top: 0;
+        color: #0056b3;
+        border-bottom: 1px solid #b3d9ff;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+      .response-container p {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.6;
+        color: #555;
+      }
+      .loading-spinner {
+        display: none;
+        margin: 20px auto;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Multi-LLM API Explorer</h1>
+
+    <div id="prompt-section">
+        <label for="prompt">Enter your prompt:</label><br />
+        <textarea id="prompt" placeholder="Type your query here..."></textarea
+        ><br />
+        <button onclick="getLLMResponses()">Get Responses</button>
+        <div id="loading-spinner" class="loading-spinner"></div>
+    </div>
+
+    <div id="responses-output" class="response-grid">
+        <div id="gemini-response" class="response-container">
+            <h3>Google Gemini Response:</h3>
+            <p>Waiting for prompt...</p>
+        </div>
+        <div id="groq-response" class="response-container">
+            <h3>Groq Response:</h3>
+            <p>Waiting for prompt...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+      async function getLLMResponses() {
+        const prompt = document.getElementById("prompt").value;
+        if (!prompt.trim()) {
+          alert("Please enter a prompt!");
+          return;
+        }
+
+        // Show loading spinner
+        document.getElementById("loading-spinner").style.display = "block";
+
+        // Clear previous responses and set to generating
+        document
+          .getElementById("gemini-response")
+          .querySelector("p").textContent = "Generating...";
+        document
+          .getElementById("groq-response")
+          .querySelector("p").textContent = "Generating...";
+        // ... clear other responses
+
+        try {
+          // *** MODIFICATION HERE: Changed the API endpoint to "/api/generate" ***
+          const response = await fetch("/api/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt: prompt }), // Ensure prompt is sent as a JSON object with key "prompt"
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            document
+              .getElementById("gemini-response")
+              .querySelector("p").textContent =
+              data.gemini || "No response / Error.";
+            document
+              .getElementById("groq-response")
+              .querySelector("p").textContent =
+              data.groq || "No response / Error."; // Corrected key from 'huggingface' to 'groq' based on 'Groq Response' title
+            // ... update other responses based on the keys in the JSON response
+          } else {
+            console.error("Error from server:", data.error);
+            document
+              .getElementById("gemini-response")
+              .querySelector("p").textContent = `Error: ${
+              data.error || "Unknown server error."
+            }`;
+            document
+              .getElementById("groq-response")
+              .querySelector("p").textContent = `Error: ${
+              data.error || "Unknown server error."
+            }`;
+            // ... update other responses
+          }
+        } catch (error) {
+          console.error("Network or server error:", error);
+          document
+            .getElementById("gemini-response")
+            .querySelector("p").textContent = `Network Error: ${error.message}`;
+          document
+            .getElementById("groq-response")
+            .querySelector("p").textContent = `Network Error: ${error.message}`;
+          // ... update other responses
+        } finally {
+          // Hide loading spinner
+          document.getElementById("loading-spinner").style.display = "none";
+        }
+      }
+    </script>
+</body>
+</html>
