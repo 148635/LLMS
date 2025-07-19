@@ -1,15 +1,11 @@
-# Stage 1: Build the Spring Boot application (using a multi-stage build for smaller final image)
-FROM openjdk:17-jdk-slim
-
-EXPOSE 8080
-
+# Stage 1: Build the app
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-RUN ./mvnw clean package -DskipTests
-
-RUN ls target/
-# Copy the jar file into the container
-COPY target/model-1.0.0.jar app.jar
-
-# Run the jar file
+# Stage 2: Run the app
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
