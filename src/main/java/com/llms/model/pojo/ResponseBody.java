@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class ResponseBody {
     private String gemini;
     private String groq;
+    private String together;
 }
