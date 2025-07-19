@@ -4,6 +4,7 @@ import com.llms.model.pojo.FallBackResponse;
 import com.llms.model.pojo.ImageResponseBody;
 import com.llms.model.pojo.PromptBody;
 import com.llms.model.pojo.ResponseBody;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import static com.llms.model.utils.Constants.*;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class ApiController {
 
     @Value("${groq.api.key}")
@@ -128,8 +130,10 @@ public class ApiController {
 
             JSONArray responseArray = new JSONObject(response.body()).getJSONArray("choices");
             for(Object object : responseArray){
+                log.info("body : {}", object.toString());
                 JSONObject jsonObject = (JSONObject) object;
                 assistantReply += jsonObject.getJSONObject("message").getString("content");
+                log.info("res : {}", assistantReply);
             }
 //            String assistantReply = new JSONObject(response.body())
 //                    .getJSONArray("choices")
@@ -173,6 +177,9 @@ public class ApiController {
                     .getJSONObject(0)
                     .getString("image_base64");
 
+            log.info("res : {}", base64);
+            log.info("body : {}", json.getJSONObject("output")
+                    .getJSONArray("choices").toString());
             return base64;
         }
         catch (Exception e) {
@@ -211,13 +218,13 @@ public class ApiController {
                 return "Gemini error: No candidates returned.\nRaw response: " + response.body();
             }
 
+            log.info("body : {}", json.toString());
             return json.getJSONArray("candidates")
                     .getJSONObject(0)
                     .getJSONObject("content")
                     .getJSONArray("parts")
                     .getJSONObject(0)
                     .getString("text");
-
         } catch (Exception e) {
             return GEMINI_ERROR_PREFIX + e.getMessage();
         }
