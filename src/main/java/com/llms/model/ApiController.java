@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -164,13 +166,14 @@ public class ApiController {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
                     .header("Authorization", "Bearer " + togetherApiKey)
-                    .header("Content-Type", "application/json")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
                     .build();
 
             HttpResponse<String> res = HttpClient.newHttpClient()
                     .send(req, HttpResponse.BodyHandlers.ofString());
 
+            log.info("res : {}", res.toString());
             JSONObject json = new JSONObject(res.body());
             String base64 = json.getJSONObject("output")
                     .getJSONArray("choices")
