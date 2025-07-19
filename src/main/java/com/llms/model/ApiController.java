@@ -106,7 +106,7 @@ public class ApiController {
             requestBody.put("model", model);
             requestBody.put("temperature", 0.7);
             requestBody.put("top_p", 0.9);
-            requestBody.put("max_tokens", 256);
+            requestBody.put("max_tokens", 10000);
 
             JSONArray messages = new JSONArray();
             JSONObject userMessage = new JSONObject();
@@ -202,7 +202,7 @@ public class ApiController {
                             ))
                     ))
                     .put("generationConfig", new JSONObject()
-                            .put("maxOutputTokens", 100)
+                            .put("maxOutputTokens", 10000)
                     ).toString();
 
             HttpRequest request = HttpRequest.newBuilder()
