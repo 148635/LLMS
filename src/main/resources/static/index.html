@@ -168,8 +168,7 @@
             document
               .getElementById("groq-response")
               .querySelector("p").textContent =
-              data.groq || "No response / Error."; // Corrected key from 'huggingface' to 'groq' based on 'Groq Response' title
-            // ... update other responses based on the keys in the JSON response
+              data.groq || "No response / Error.";
             document
               .getElementById("together-response")
               .querySelector("p").textContent =
@@ -185,7 +184,8 @@
               .getElementById("groq-response")
               .querySelector("p").textContent = `Error: ${
               data.error || "Unknown server error."
-              document
+            }`;
+            document
               .getElementById("together-response")
               .querySelector("p").textContent = `Error: ${
               data.error || "Unknown server error."
