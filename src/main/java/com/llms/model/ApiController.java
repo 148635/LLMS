@@ -1,6 +1,7 @@
 package com.llms.model;
 
 import com.llms.model.pojo.FallBackResponse;
+import com.llms.model.pojo.ImageResponseBody;
 import com.llms.model.pojo.PromptBody;
 import com.llms.model.pojo.ResponseBody;
 import org.json.JSONArray;
@@ -49,6 +50,23 @@ public class ApiController {
             fallBackResponse.setResponse("Give a proper Prompt Once in a while!");
             return fallBackResponse;
         }
+    }
+
+    @PostMapping("/generateImage")
+    public Object generateImage(@RequestBody PromptBody promptBody){
+        String prompt = promptBody.getPrompt();
+
+        if(prompt != null && !prompt.isEmpty()) {
+            ImageResponseBody responseBody = new ImageResponseBody();
+            responseBody.setResponse(callTogetherApiForImage(prompt));
+            return responseBody;
+        }
+        else{
+            FallBackResponse fallBackResponse = new FallBackResponse();
+            fallBackResponse.setResponse("Give a proper Prompt Once in a while!");
+            return fallBackResponse;
+        }
+
     }
 
     private String callGroq(String prompt) {
@@ -106,13 +124,56 @@ public class ApiController {
             HttpClient client = HttpClient.newHttpClient();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            String assistantReply = new JSONObject(response.body())
-                    .getJSONArray("choices")
-                    .getJSONObject(0)
-                    .getJSONObject("message")
-                    .getString("content");
+            String assistantReply = "";
+
+            JSONArray responseArray = new JSONObject(response.body()).getJSONArray("choices");
+            for(Object object : responseArray){
+                JSONObject jsonObject = (JSONObject) object;
+                assistantReply += jsonObject.getJSONObject("message").getString("content");
+            }
+//            String assistantReply = new JSONObject(response.body())
+//                    .getJSONArray("choices")
+//                    .getJSONObject(0)
+//                    .getJSONObject("message")
+//                    .getString("content");
 
             return assistantReply;
+        }
+        catch (Exception e) {
+            return TOGETHER_ERROR_PREFIX + e.getMessage();
+        }
+    }
+
+    private String callTogetherApiForImage(String prompt){
+        try {
+            String API_URL = "https://api.together.xyz/inference";
+            String model = "black-forest-labs/FLUX.1-kontext-dev";
+
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("model", model);
+            requestBody.put("prompt", prompt);
+            requestBody.put("n", 4);
+            requestBody.put("steps", 20);
+            requestBody.put("width", 512);
+            requestBody.put("height", 512);
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(API_URL))
+                    .header("Authorization", "Bearer " + togetherApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+                    .build();
+
+            HttpResponse<String> res = HttpClient.newHttpClient()
+                    .send(req, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject json = new JSONObject(res.body());
+            String base64 = json.getJSONObject("output")
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getString("image_base64");
+
+            return base64;
         }
         catch (Exception e) {
             return TOGETHER_ERROR_PREFIX + e.getMessage();

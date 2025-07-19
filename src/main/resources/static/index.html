@@ -123,6 +123,18 @@
             <p>Waiting for prompt...</p>
         </div>
     </div>
+
+    <div id="image-prompt-section" style="margin-top: 40px; text-align: center;">
+        <label for="imagePrompt">Enter image prompt:</label><br />
+        <textarea id="imagePrompt" placeholder="Type your image prompt..."></textarea><br />
+        <button onclick="generateImage()">Generate Image</button>
+    </div>
+
+    <div id="image-response" class="response-container" style="margin-top: 30px;">
+        <h3>Together AI Image Response:</h3>
+        <p id="image-loading" style="display: none;">Generating image...</p>
+        <img id="generatedImage" src="" alt="Generated" style="max-width: 100%; display: none;" />
+    </div>
 </div>
 
 <script>
@@ -209,6 +221,42 @@
           document.getElementById("loading-spinner").style.display = "none";
         }
       }
+
+      async function generateImage() {
+    const prompt = document.getElementById("imagePrompt").value;
+    const loading = document.getElementById("image-loading");
+    const imageTag = document.getElementById("generatedImage");
+
+    if (!prompt.trim()) {
+      alert("Please enter an image prompt!");
+      return;
+    }
+
+    loading.style.display = "block";
+    imageTag.style.display = "none";
+
+    try {
+      const response = await fetch("/api/generateImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt })
+      });
+
+      const dataResponse = await response.json();
+
+      if (response.ok && data) {
+        imageTag.src = `data:image/png;base64,${dataResponse}`;
+        imageTag.style.display = "block";
+      } else {
+        loading.textContent = "Image generation failed.";
+      }
+    } catch (error) {
+      console.error("Image generation error:", error);
+      loading.textContent = "Error generating image.";
+    } finally {
+      loading.style.display = "none";
+    }
+  }
     </script>
 </body>
 </html>
