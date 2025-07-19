@@ -7,7 +7,7 @@ WORKDIR /app
 
 RUN ./mvnw clean package -DskipTests
 
-ls target/
+RUN ls target/
 # Copy the jar file into the container
 COPY target/model-0.0.1-SNAPSHOT.jar.jar app.jar
 
