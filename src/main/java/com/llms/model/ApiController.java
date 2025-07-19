@@ -28,6 +28,9 @@ public class ApiController {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    @Value("${together.api.key}")
+    private String togetherApiKey;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @PostMapping("/generate")
@@ -38,6 +41,7 @@ public class ApiController {
             ResponseBody responseBody = new ResponseBody();
             responseBody.setGemini(callGemini(prompt));
             responseBody.setGroq(callGroq(prompt));
+            responseBody.setTogether(callTogetherAI(prompt));
             return responseBody;
         }
         else{
@@ -75,6 +79,48 @@ public class ApiController {
 
     private String getExceptionMessage(String error){
         return EXCEPTION_MSG + error;
+    }
+
+    private String callTogetherAI(String prompt){
+        try {
+            String API_URL = "https://api.together.xyz/v1/chat/completions";
+            String model = "mistralai/Mixtral-8x7B-Instruct-v0.1";
+
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("model", model);
+            requestBody.put("temperature", 0.7);
+            requestBody.put("top_p", 0.9);
+            requestBody.put("max_tokens", 256);
+
+            JSONArray messages = new JSONArray();
+            JSONObject userMessage = new JSONObject();
+            userMessage.put("role", "user");
+            userMessage.put("content", prompt);
+            messages.put(userMessage);
+
+            requestBody.put("messages", messages);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_URL))
+                    .header("Authorization", "Bearer " + togetherApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+                    .build();
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            String assistantReply = new JSONObject(response.body())
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+
+            return assistantReply;
+        }
+        catch (Exception e) {
+            return TOGETHER_ERROR_PREFIX + e.getMessage();
+        }
     }
 
     private String callGemini(String prompt) {
