@@ -122,6 +122,10 @@
             <h3>Together Response:</h3>
             <p>Waiting for prompt...</p>
         </div>
+        <div id="cohere-response" class="response-container">
+            <h3>Cohere Response:</h3>
+            <p>Waiting for prompt...</p>
+        </div>
     </div>
 
     <div id="image-prompt-section" style="margin-top: 40px; text-align: center;">
@@ -158,6 +162,9 @@
         document
           .getElementById("together-response")
           .querySelector("p").textContent = "Generating...";
+        document
+          .getElementById("cohere-response")
+          .querySelector("p").textContent = "Generating...";
         // ... clear other responses
 
         try {
@@ -185,6 +192,10 @@
               .getElementById("together-response")
               .querySelector("p").textContent =
               data.together || "No response / Error.";
+            document
+              .getElementById("cohere-response")
+              .querySelector("p").textContent =
+              data.together || "No response / Error.";
           } else {
             console.error("Error from server:", data.error);
             document
@@ -202,6 +213,11 @@
               .querySelector("p").textContent = `Error: ${
               data.error || "Unknown server error."
             }`;
+            document
+              .getElementById("cohere-response")
+              .querySelector("p").textContent = `Error: ${
+              data.error || "Unknown server error."
+            }`;
             // ... update other responses
           }
         } catch (error) {
@@ -214,6 +230,9 @@
             .querySelector("p").textContent = `Network Error: ${error.message}`;
           document
             .getElementById("together-response")
+            .querySelector("p").textContent = `Network Error: ${error.message}`;
+          document
+            .getElementById("cohere-response")
             .querySelector("p").textContent = `Network Error: ${error.message}`;
           // ... update other responses
         } finally {
