@@ -11,4 +11,5 @@ public class ResponseBody {
     private String gemini;
     private String groq;
     private String together;
+    private String cohere;
 }

@@ -14,11 +14,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.cohere.api.Cohere;
+import com.cohere.api.resources.v2.requests.V2ChatRequest;
+import com.cohere.api.types.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 import static com.llms.model.utils.Constants.*;
 
@@ -36,6 +40,9 @@ public class ApiController {
     @Value("${together.api.key}")
     private String togetherApiKey;
 
+    @Value("${cohere.api.key}")
+    private String cohereApiKey;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @PostMapping("/generate")
@@ -47,6 +54,7 @@ public class ApiController {
             responseBody.setGemini(callGemini(prompt));
             responseBody.setGroq(callGroq(prompt));
             responseBody.setTogether(callTogetherAI(prompt));
+            responseBody.setCohere(callCohere(prompt));
             return responseBody;
         }
         else{
@@ -187,6 +195,40 @@ public class ApiController {
         }
         catch (Exception e) {
             return TOGETHER_ERROR_PREFIX + e.getMessage();
+        }
+    }
+
+    private String callCohere(String prompt){
+        try {
+            String responseBody = "";
+            Cohere cohere = Cohere.builder().token(cohereApiKey).clientName("snippet").build();
+            ChatResponse response =
+                    cohere.v2()
+                            .chat(
+                                    V2ChatRequest.builder()
+                                            .model("command-a-03-2025")
+                                            .messages(
+                                                    List.of(
+                                                            ChatMessageV2.user(
+                                                                    UserMessage.builder()
+                                                                            .content(
+                                                                                    UserMessageContent
+                                                                                            .of(prompt))
+                                                                            .build())))
+                                            .build());
+
+            List<AssistantMessageResponseContentItem> res = response.getMessage().getContent().get();
+            if (res != null) {
+                for (AssistantMessageResponseContentItem val : res) {
+                    if (val.getText().get() != null)
+                        responseBody += val.getText().get();
+                }
+            }
+
+            return responseBody;
+        }
+        catch (Exception e){
+            return COHERE_ERROR_PREFIX + e.getMessage();
         }
     }
 
